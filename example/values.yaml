@@ -1,5 +1,0 @@
-app:
-  image: my-app
-  tag: latest
-  env:
-    EXAMPLE: "true"

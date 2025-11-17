@@ -1,5 +1,0 @@
-services:
-  {{ .Release.Name }}-app:
-    image: "{{ .Values.app.image }}:{{ .Values.app.tag }}"
-    env_file:
-      - ./files/config.yml
