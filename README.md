@@ -16,9 +16,9 @@ ComposePack packages Docker Compose applications the way Helm packages charts. Y
 curl -fsSL https://raw.githubusercontent.com/GareArc/composepack/main/scripts/install.sh | bash
 ```
 
-* Defaults to `/usr/local/bin/composepack`. Override with `COMPOSEPACK_INSTALL_DIR`.
+* Installs to `/usr/local/bin/composepack` when writable, otherwise falls back to `~/.local/bin/composepack`. Override with `COMPOSEPACK_INSTALL_DIR`.
 * Set `COMPOSEPACK_REPO` if releases live under a different GitHub org/repo.
-* Requires `curl` (and `python3` only when discovering the “latest” tag).
+* Requires `curl` (and `python3` only when discovering the “latest” tag automatically). If you haven’t published a release yet, pass a specific tag/version to the script once it exists.
 
 Uninstall with:
 
@@ -65,9 +65,10 @@ make build   # go build ./...
      values.yaml
      templates/
        compose/00-app.tpl.yaml
-       files/config.yml.tpl
+       files/config/app.env.tpl
        helpers/_helpers.tpl
-     files/.gitkeep
+     files/
+       config/
    ```
 
 4. Edit `values.yaml`, `templates/compose/*.tpl.yaml`, and `templates/files/*.tpl` to match your services and runtime assets. Anything under `templates/helpers/` contains reusable snippets for `{{ include }}`.
