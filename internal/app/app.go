@@ -262,7 +262,7 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 		return "", nil, fmt.Errorf("render file templates: %w", err)
 	}
 
-	mergedCompose, orderedFragments, err := a.mergeFragments(ctx, composeFragments)
+	mergedCompose, orderedFragments, err := a.mergeFragments(ctx, composeFragments, fileAssets, opts.ReleaseName)
 	if err != nil {
 		return "", nil, err
 	}
@@ -359,7 +359,7 @@ func (a *Application) buildValues(ch *chart.Chart, opts RenderOptions) (map[stri
 	return result, sources, nil
 }
 
-func (a *Application) mergeFragments(ctx context.Context, fragments map[string][]byte) ([]byte, []string, error) {
+func (a *Application) mergeFragments(ctx context.Context, fragments map[string][]byte, files map[string][]byte, releaseName string) ([]byte, []string, error) {
 	tempDir, err := os.MkdirTemp("", "composepack-fragments-*")
 	if err != nil {
 		return nil, nil, fmt.Errorf("create temp directory: %w", err)
@@ -384,15 +384,30 @@ func (a *Application) mergeFragments(ctx context.Context, fragments map[string][
 		fragmentPaths = append(fragmentPaths, dest)
 	}
 
+	if len(files) > 0 {
+		filesRoot := filepath.Join(tempDir, "files")
+		for path, data := range files {
+			target := filepath.Join(filesRoot, path)
+			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+				return nil, nil, fmt.Errorf("prepare file asset directory: %w", err)
+			}
+			if err := os.WriteFile(target, data, 0o644); err != nil {
+				return nil, nil, fmt.Errorf("write file asset %s: %w", path, err)
+			}
+		}
+	}
+
 	data, err := a.Runtime.DockerRunner.MergeFragments(ctx, dockercompose.MergeOptions{
 		WorkingDir:    tempDir,
 		FragmentPaths: fragmentPaths,
+		ProjectName:   releaseName,
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return data, names, nil
+	rendered := strings.ReplaceAll(string(data), tempDir, ".")
+	return []byte(rendered), names, nil
 }
 
 func loadValuesFile(path string) (map[string]any, error) {

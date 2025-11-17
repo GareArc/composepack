@@ -37,6 +37,7 @@ func NewRunner(execRunner *process.Runner) *Runner {
 type MergeOptions struct {
 	WorkingDir    string
 	FragmentPaths []string
+	ProjectName   string
 }
 
 // CommandOptions describe docker compose command invocations from runtime directories.
@@ -57,7 +58,7 @@ func (r *Runner) MergeFragments(ctx context.Context, opts MergeOptions) ([]byte,
 	}
 	args = append(args, "config")
 
-	stdout, stderr, err := r.run(ctx, opts.WorkingDir, args)
+	stdout, stderr, err := r.run(ctx, opts.WorkingDir, args, opts.ProjectName)
 	if err != nil {
 		return nil, composeError("docker compose config", err, stderr)
 	}
@@ -74,18 +75,19 @@ func (r *Runner) Run(ctx context.Context, opts CommandOptions) error {
 		return errors.New("docker compose arguments are required")
 	}
 
-	_, stderr, err := r.run(ctx, opts.WorkingDir, opts.Args)
+	_, stderr, err := r.run(ctx, opts.WorkingDir, opts.Args, "")
 	if err != nil {
 		return composeError("docker compose", err, stderr)
 	}
 	return nil
 }
 
-func (r *Runner) run(ctx context.Context, dir string, args []string) ([]byte, []byte, error) {
+func (r *Runner) run(ctx context.Context, dir string, args []string, project string) ([]byte, []byte, error) {
 	stdout, stderr, err := r.exec.Run(ctx, process.Command{
 		Name: r.primary[0],
 		Args: append(append([]string{}, r.primary[1:]...), args...),
 		Dir:  dir,
+		Env:  composeEnv(project),
 	})
 	if err == nil {
 		return stdout, stderr, nil
@@ -98,9 +100,16 @@ func (r *Runner) run(ctx context.Context, dir string, args []string) ([]byte, []
 		Name: r.fallback[0],
 		Args: append(append([]string{}, r.fallback[1:]...), args...),
 		Dir:  dir,
+		Env:  composeEnv(project),
 	})
 }
 
+func composeEnv(project string) []string {
+	if project == "" {
+		return nil
+	}
+	return []string{fmt.Sprintf("COMPOSE_PROJECT_NAME=%s", project)}
+}
 func composeError(action string, err error, stderr []byte) error {
 	msg := strings.TrimSpace(string(stderr))
 	if msg != "" {
