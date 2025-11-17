@@ -1,117 +1,54 @@
-# ComposePack
+# **ComposePack**
 
-ComposePack packages Docker Compose applications the way Helm packages charts. You point it at a chart directory (templated Compose fragments + assets) and ComposePack renders a release, writes a self-contained runtime directory, and runs `docker compose` for you.
+> 🧩 **Templating for Docker Compose — finally done right.**
+> The power of Helm-style configuration for Docker Compose.
 
-## Why use ComposePack?
+<p align="center">
+  <!-- Optional: drop a banner here later -->
+  <!-- <img src="docs/images/banner.png" width="700" /> -->
+</p>
 
-* **Templating + overrides** – system defaults live in the chart, end-users provide `values.yaml` overlays or `--set` flags so there’s a clean separation between product and customer configs.
-* **Safe runtimes** – each release lives in `.cpack-releases/<name>/` with a merged `docker-compose.yaml` and rendered files.
-* **Simple CLI** – thin wrapper over `docker compose` (`install`, `up`, `down`, `logs`, `ps`, `version`).
+Docker Compose is great for running containers —
+but it has one huge missing piece:
+**no templating, no dynamic config, no values, no clean overrides.**
 
-## Installation
+This forces teams to ship giant YAML files, copy/paste configs across environments, switch between profiles, hand-edit deployments, extra scripts for variable processing and pray nothing breaks when customers edit their .env files.
 
-### macOS / Linux
+**ComposePack fixes all of this.** ✨
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/GareArc/composepack/main/scripts/install.sh | bash
-```
+ComposePack brings a **modern templating engine**, **values.yaml**, and a **real packaging workflow** to Docker Compose —
+all while staying 100% compatible with the Compose CLI.
 
-* Installs to `/usr/local/bin/composepack` when writable, otherwise falls back to `~/.local/bin/composepack`. Override with `COMPOSEPACK_INSTALL_DIR`.
-* Set `COMPOSEPACK_REPO` if releases live under a different GitHub org/repo.
-* Requires `curl` (and `python3` only when discovering the “latest” tag automatically). If you haven’t published a release yet, pass a specific tag/version to the script once it exists.
+Think of it as:
 
-Uninstall with:
+<p align="center">
+  <b>⚓ Helm-style workflows • 🎛️ Dynamic templating • 📦 Installable charts</b><br>
+  <b>→ for Docker Compose ←</b>
+</p>
 
-```bash
-./scripts/uninstall.sh
-```
+With ComposePack you can:
 
-### Windows (PowerShell)
+* 📝 Write Compose files using **Go-style templates**
+* ⚙️ Ship clean **values.yaml** defaults + user overrides
+* 📦 Distribute your app as an **installable chart**
+* 🔐 Render an isolated, reproducible **release directory**
+* 🧩 Generate a single merged `docker-compose.yaml` at runtime
+* 🚀 Run everything through a simple CLI (`install`, `up`, `down`, `logs`, `ps`)
 
-```powershell
-./scripts/install.ps1 -Version v1.0.0 -InstallDir "$env:ProgramFiles\ComposePack"
-```
-
-Uninstall:
-
-```powershell
-./scripts/uninstall.ps1
-```
-
-### Build from source
+All powered by the tools you already use — **`docker compose` under the hood**.
 
 ```bash
-git clone https://github.com/GareArc/composepack.git
-cd composepack
-make build   # go build ./...
+composepack install ./charts/myapp --name prod -f values-prod.yaml --auto-start
 ```
 
-`make generate` runs `go generate ./...` (Wire DI, etc.) if you change providers.
+Whether you're shipping on-prem software, managing multi-env stacks, or just sick of duplicating Compose and .env files, ComposePack brings structure, clarity, and modern tooling to the Compose ecosystem.
 
-## Create a chart
+## ⚖️ ComposePack vs. Docker Compose
 
-1. Choose a directory for your chart (e.g., `charts/example`).
-2. Run the init command:
-
-   ```bash
-   composepack init charts/example --name example --version 0.1.0
-   ```
-
-3. You’ll get this starter structure:
-
-   ```
-   charts/example/
-     Chart.yaml
-     values.yaml
-     templates/
-       compose/00-app.tpl.yaml
-       files/config/app.env.tpl
-       helpers/_helpers.tpl
-     files/
-       config/
-   ```
-
-4. Edit `values.yaml`, `templates/compose/*.tpl.yaml`, and `templates/files/*.tpl` to match your services and runtime assets. Anything under `templates/helpers/` contains reusable snippets for `{{ include }}`.
-
-See [`docs/PRD.md`](docs/PRD.md) for full details on chart layout, helper functions, and runtime expectations.
-
-## Quick start
-
-1. **Prepare a chart** following the structure in [`PRD.md`](docs/PRD.md) (`Chart.yaml`, `templates/`, `files/`, etc.).
-2. **Install the chart** into a release:
-
-   ```bash
-   composepack install ./charts/example --name my-release -f values-prod.yaml --auto-start
-   ```
-
-   This renders `.cpack-releases/my-release/` and runs `docker compose up -d`.
-
-3. **Iterate**:
-
-   ```bash
-   composepack template my-release --chart ./charts/example   # render only
-   composepack up my-release --chart ./charts/example -f overrides.yaml
-   composepack logs my-release --follow
-   composepack down my-release --volumes
-   composepack ps my-release
-   composepack version
-   ```
-
-All runtime files live under `.cpack-releases/<release>/`. You can `cd` into that directory and run `docker compose` manually if needed.
-
-## Runtime layout (for reference)
-
-```
-.cpack-releases/<release>/
-  docker-compose.yaml   # merged compose file
-  files/                # rendered scripts/configs referenced in templates
-  release.json          # metadata describing chart + values
-```
-
-You rarely need to edit these manually, but it helps to know where ComposePack keeps things.
-
-## Contributing
-
-* Use `make fmt`, `make test`, `make build`, and `make generate` when developing.
-* CI (`.github/workflows/ci.yml`) runs gofmt, go vet, and go test on PRs and pushes to `main`.
-* Tag releases (`git tag vX.Y.Z && git push --tags`) to trigger the release workflow, which cross-compiles binaries and uploads them to GitHub Releases.
+| What you get                                     | Docker Compose | **ComposePack** |
+| ------------------------------------------------ | :------------: | :-------------: |
+| Templating for Compose files                     |       ❌        |      **✅**      |
+| Structured config model (system vs. user values) | ❌ (flat .env)  |      **✅**      |
+| Installable packages (charts)                    |       ❌        |      **✅**      |
+| Reproducible release environments                |       ❌        |      **✅**      |
+| 100% Compose-compatible runtime                  |       ✅        |      **✅**      |
