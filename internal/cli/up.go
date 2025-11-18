@@ -13,6 +13,7 @@ func NewUpCommand(application *app.Application) *cobra.Command {
 		setValues  []string
 		chartSrc   string
 		detach     bool
+		runtimeDir string
 	)
 
 	cmd := &cobra.Command{
@@ -37,6 +38,7 @@ func NewUpCommand(application *app.Application) *cobra.Command {
 					ValueFiles:     append([]string{}, valueFiles...),
 					SetValues:      overrides,
 					RuntimeBaseDir: releaseDir,
+					RuntimePath:    runtimeDir,
 				},
 				Detach: detach,
 			}
@@ -49,6 +51,7 @@ func NewUpCommand(application *app.Application) *cobra.Command {
 	cmd.Flags().StringArrayVarP(&valueFiles, "values", "f", nil, "values files to include")
 	cmd.Flags().StringArrayVar(&setValues, "set", nil, "direct values to set")
 	cmd.Flags().BoolVarP(&detach, "detach", "d", false, "pass --detach to docker compose up")
+	cmd.Flags().StringVar(&runtimeDir, "runtime-dir", "", "path to existing release directory (overrides --release-dir)")
 
 	return cmd
 }

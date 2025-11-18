@@ -8,7 +8,10 @@ import (
 
 // NewDownCommand defines `composepack down` placeholder logic.
 func NewDownCommand(application *app.Application) *cobra.Command {
-	var removeVolumes bool
+	var (
+		removeVolumes bool
+		runtimeDir    string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "down <release>",
@@ -23,6 +26,7 @@ func NewDownCommand(application *app.Application) *cobra.Command {
 			opts := app.DownOptions{
 				ReleaseName:    args[0],
 				RuntimeBaseDir: releaseDir,
+				RuntimePath:    runtimeDir,
 				RemoveVolumes:  removeVolumes,
 			}
 
@@ -31,6 +35,7 @@ func NewDownCommand(application *app.Application) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&removeVolumes, "volumes", false, "include volumes when bringing the release down")
+	cmd.Flags().StringVar(&runtimeDir, "runtime-dir", "", "path to release directory (overrides --release-dir)")
 
 	return cmd
 }

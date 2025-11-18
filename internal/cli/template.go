@@ -12,6 +12,7 @@ func NewTemplateCommand(application *app.Application) *cobra.Command {
 		valueFiles []string
 		setValues  []string
 		chartSrc   string
+		runtimeDir string
 	)
 
 	cmd := &cobra.Command{
@@ -36,6 +37,7 @@ func NewTemplateCommand(application *app.Application) *cobra.Command {
 					ValueFiles:     append([]string{}, valueFiles...),
 					SetValues:      overrides,
 					RuntimeBaseDir: releaseDir,
+					RuntimePath:    runtimeDir,
 				},
 			}
 
@@ -46,6 +48,7 @@ func NewTemplateCommand(application *app.Application) *cobra.Command {
 	cmd.Flags().StringVar(&chartSrc, "chart", "", "chart directory or archive to render")
 	cmd.Flags().StringArrayVarP(&valueFiles, "values", "f", nil, "values files to include")
 	cmd.Flags().StringArrayVar(&setValues, "set", nil, "direct values to set (key=value)")
+	cmd.Flags().StringVar(&runtimeDir, "runtime-dir", "", "path to existing release directory (overrides --release-dir)")
 
 	return cmd
 }
