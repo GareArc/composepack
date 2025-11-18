@@ -83,7 +83,10 @@ func PackageChart(ctx context.Context, loader chart.Loader, opts Options) (strin
 		if err != nil {
 			return err
 		}
-		if rel == "." || shouldSkip(rel) {
+		if rel == "." {
+			return nil
+		}
+		if shouldSkip(rel) {
 			if d.IsDir() {
 				return filepath.SkipDir
 			}
