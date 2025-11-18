@@ -8,6 +8,8 @@ import (
 
 // NewPSCommand defines `composepack ps` placeholder logic.
 func NewPSCommand(application *app.Application) *cobra.Command {
+	var runtimeDir string
+
 	cmd := &cobra.Command{
 		Use:   "ps <release>",
 		Short: "Display docker compose ps for a release",
@@ -21,11 +23,14 @@ func NewPSCommand(application *app.Application) *cobra.Command {
 			opts := app.PSOptions{
 				ReleaseName:    args[0],
 				RuntimeBaseDir: releaseDir,
+				RuntimePath:    runtimeDir,
 			}
 
 			return application.ShowStatus(cmd.Context(), opts)
 		},
 	}
+
+	cmd.Flags().StringVar(&runtimeDir, "runtime-dir", "", "path to release directory (overrides --release-dir)")
 
 	return cmd
 }

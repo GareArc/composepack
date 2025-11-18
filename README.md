@@ -1,5 +1,7 @@
 # **ComposePack**
 
+**English** | [简体中文](README.zh.md)
+
 > 🧩 **Pack your Compose, ship it anywhere.**  
 > The power of Helm-style configuration for Docker Compose.
 
@@ -25,13 +27,13 @@
 </p>
 
 Docker Compose is great for running containers — but it has one huge missing piece:  
-**no templating, no dynamic config, no values, no clean overrides.**
+**no templating, no dynamic config, no clean overrides.**
 
-This forces teams to ship giant YAML files, copy/paste configs across environments, switch between profiles, hand-edit deployments, bolt on extra scripts for variable processing, and pray nothing breaks when customers edit their `.env` files.
+This forces teams to ship giant YAML files, copy/paste configs across environments, hand-edit deployments, bolt on extra scripts for variable processing, and pray nothing breaks when customers edit their `.env` files. For users, it's a nightmare to manage multiple environments and keep track of changes when upgrading .env files.
 
 **ComposePack fixes all of this.** ✨
 
-ComposePack brings a **modern templating engine**, **values.yaml**, and a **real packaging workflow** to Docker Compose — all while staying 100% compatible with the Compose CLI.
+ComposePack brings a **modern templating engine**, **overridable config system**, and a **real packaging workflow** to Docker Compose — all while staying 100% compatible with the Compose CLI.
 
 <p align="center">
   <b>⚓ Helm-style workflows • 🎛️ Dynamic templating • 📦 Installable charts</b><br>
@@ -69,7 +71,6 @@ Whether you're shipping on-prem software, managing multi-env stacks, or just sic
 
 ## 📚 Table of Contents
 
-- [⚖️ ComposePack vs. Docker Compose](#️-composepack-vs-docker-compose)
 - [⚡ Quick 60-Second Demo](#-quick-60-second-demo)
 - [📦 Installation](#-installation)
 - [🧠 How It Works (High-Level)](#-how-it-works-high-level)
@@ -268,6 +269,13 @@ All runtime files for this release live in:
 ```
 
 If needed, you can `cd` into this folder and run `docker compose` manually.
+
+Want to run these commands from somewhere else? Pass `--runtime-dir` to point directly at the release folder:
+
+```bash
+composepack up myapp --runtime-dir /opt/releases/myapp
+composepack logs myapp --runtime-dir /opt/releases/myapp --follow
+```
 
 ---
 
@@ -521,18 +529,7 @@ cd .cpack-releases/myapp
 docker compose -f docker-compose.yaml up
 ```
 
-If you use `docker compose` manually, you must `cd` into the correct release directory first; otherwise, Compose won’t see the right file and volumes.
-
----
-
-Love that idea — putting “why not X” into a **Commonly Asked Questions** section feels way more natural and less defensive than a standalone “Why Not Helm?” block.
-
-You basically want to:
-
-1. **Remove** the `## 📝 Why Not Just Use Helm?` section
-2. **Add** a `## ❓ Commonly Asked Questions` section near the bottom (right before Contributing), and fold those explanations into Q&A
-
-Here’s a drop-in FAQ section you can append to your current README, and you can delete the old Helm section.
+You must `cd` into the correct directory that contains `.cpack-releases`; otherwise, ComposePack won’t see the right file and volumes.
 
 ---
 

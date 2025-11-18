@@ -9,8 +9,9 @@ import (
 // NewLogsCommand defines `composepack logs` placeholder logic.
 func NewLogsCommand(application *app.Application) *cobra.Command {
 	var (
-		follow bool
-		tail   int
+		follow     bool
+		tail       int
+		runtimeDir string
 	)
 
 	cmd := &cobra.Command{
@@ -26,6 +27,7 @@ func NewLogsCommand(application *app.Application) *cobra.Command {
 			opts := app.LogsOptions{
 				ReleaseName:    args[0],
 				RuntimeBaseDir: releaseDir,
+				RuntimePath:    runtimeDir,
 				Follow:         follow,
 				Tail:           tail,
 			}
@@ -36,6 +38,7 @@ func NewLogsCommand(application *app.Application) *cobra.Command {
 
 	cmd.Flags().BoolVarP(&follow, "follow", "f", false, "stream logs")
 	cmd.Flags().IntVar(&tail, "tail", 100, "lines to show from the end of the logs")
+	cmd.Flags().StringVar(&runtimeDir, "runtime-dir", "", "path to release directory (overrides --release-dir)")
 
 	return cmd
 }

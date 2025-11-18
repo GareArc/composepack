@@ -83,6 +83,7 @@ type RenderOptions struct {
 	ValueFiles     []string
 	SetValues      map[string]string
 	RuntimeBaseDir string
+	RuntimePath    string
 }
 
 // InstallOptions drives chart installation into a runtime directory.
@@ -106,6 +107,7 @@ type UpOptions struct {
 type DownOptions struct {
 	ReleaseName    string
 	RuntimeBaseDir string
+	RuntimePath    string
 	RemoveVolumes  bool
 }
 
@@ -113,6 +115,7 @@ type DownOptions struct {
 type LogsOptions struct {
 	ReleaseName    string
 	RuntimeBaseDir string
+	RuntimePath    string
 	Follow         bool
 	Tail           int
 }
@@ -121,6 +124,7 @@ type LogsOptions struct {
 type PSOptions struct {
 	ReleaseName    string
 	RuntimeBaseDir string
+	RuntimePath    string
 }
 
 // InstallRelease implements the install workflow described in the PRD.
@@ -163,7 +167,7 @@ func (a *Application) UpRelease(ctx context.Context, opts UpOptions) error {
 
 // DownRelease shells out to docker compose down for the given release.
 func (a *Application) DownRelease(ctx context.Context, opts DownOptions) error {
-	runtimeDir, err := a.runtimeDir(opts.RuntimeBaseDir, opts.ReleaseName)
+	_, runtimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
 	if err != nil {
 		return err
 	}
@@ -181,7 +185,7 @@ func (a *Application) DownRelease(ctx context.Context, opts DownOptions) error {
 
 // StreamLogs tails docker compose logs for the release.
 func (a *Application) StreamLogs(ctx context.Context, opts LogsOptions) error {
-	runtimeDir, err := a.runtimeDir(opts.RuntimeBaseDir, opts.ReleaseName)
+	_, runtimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
 	if err != nil {
 		return err
 	}
@@ -202,7 +206,7 @@ func (a *Application) StreamLogs(ctx context.Context, opts LogsOptions) error {
 
 // ShowStatus surfaces docker compose ps data.
 func (a *Application) ShowStatus(ctx context.Context, opts PSOptions) error {
-	runtimeDir, err := a.runtimeDir(opts.RuntimeBaseDir, opts.ReleaseName)
+	_, runtimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
 	if err != nil {
 		return err
 	}
@@ -220,11 +224,6 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 	}
 	if opts.ChartSource == "" {
 		return "", nil, errors.New("chart source must be provided")
-	}
-
-	baseDir, err := a.resolveBaseDir(opts.RuntimeBaseDir)
-	if err != nil {
-		return "", nil, err
 	}
 
 	ch, err := a.Runtime.ChartLoader.Load(ctx, opts.ChartSource)
@@ -268,6 +267,11 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 		return "", nil, err
 	}
 
+	baseDir, _, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
+	if err != nil {
+		return "", nil, err
+	}
+
 	runtimeDir, err := a.Runtime.RuntimeWriter.Write(ctx, releaseruntime.WriteOptions{
 		ReleaseName: opts.ReleaseName,
 		BaseDir:     baseDir,
@@ -307,15 +311,26 @@ func (a *Application) resolveBaseDir(override string) (string, error) {
 	return a.Runtime.Config.ReleasesBaseDir, nil
 }
 
-func (a *Application) runtimeDir(baseOverride, release string) (string, error) {
+func (a *Application) resolveRuntimeLocation(release, baseOverride, runtimePath string) (string, string, error) {
 	if release == "" {
-		return "", errors.New("release name is required")
+		return "", "", errors.New("release name is required")
 	}
+	if runtimePath != "" {
+		abs, err := filepath.Abs(runtimePath)
+		if err != nil {
+			return "", "", fmt.Errorf("resolve runtime path: %w", err)
+		}
+		if filepath.Base(abs) != release {
+			return "", "", fmt.Errorf("runtime directory %s does not match release %s", abs, release)
+		}
+		return filepath.Dir(abs), abs, nil
+	}
+
 	base, err := a.resolveBaseDir(baseOverride)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return filepath.Join(base, release), nil
+	return base, filepath.Join(base, release), nil
 }
 
 func (a *Application) buildValues(ch *chart.Chart, opts RenderOptions) (map[string]any, []string, error) {
