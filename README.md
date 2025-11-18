@@ -256,7 +256,6 @@ composepack down myapp --volumes
 composepack logs myapp --follow
 composepack ps myapp
 composepack template myapp
-composepack version
 ```
 
 All runtime files for this release live in:
@@ -529,7 +528,7 @@ cd .cpack-releases/myapp
 docker compose -f docker-compose.yaml up
 ```
 
-You must `cd` into the correct directory that contains `.cpack-releases`; otherwise, ComposePack won’t see the right file and volumes.
+You must `cd` into the correct directory that contains `.cpack-releases` or specify the right `--runtime-dir`, otherwise, ComposePack won’t see the right file and volumes.
 
 ---
 
@@ -549,14 +548,14 @@ You can always `cd` into `.cpack-releases/<name>/` and run `docker compose` manu
 `.env` is fine for small projects, but it has limits:
 
 - It’s **flat** (no nested structure)
-- It doesn’t distinguish **system defaults** from **user overrides**
+- It doesn’t distinguish **system defaults** from **user overrides** (chaining multiple `.env` files is super confusing and error-prone)
 - It’s hard to maintain across **upgrades**
 - You can’t easily ship a “product config” separate from customer config
 
 ComposePack gives you:
 
-- `values.yaml` for **system defaults**
-- user `values-*.yaml` and `--set` overrides on top
+- default `values.yaml` for **system defaults**
+- user can specify their own `values-*.yaml` and `--set` overrides on top
 - a clear separation between **what you ship** and **what users customize**
 - a reproducible **release directory** for each environment
 

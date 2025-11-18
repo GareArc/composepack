@@ -2,7 +2,7 @@
 
 [**English**](README.md) | **简体中文**
 
-> 🧩 **打包你的 Compose，让它跑在任何地方。**  
+> 🧩 **重生之我用Helm配置Docker Compose**  
 > 把 Helm 式的配置和打包体验带到 Docker Compose 上。
 
 <p align="center">
@@ -80,7 +80,6 @@ composepack install ./charts/myapp --name prod -f values-prod.yaml --auto-start
 - [📦 安装](#-安装)
 - [🧠 整体工作原理](#-整体工作原理)
 - [🚀 使用方式](#-使用方式)
-
   - [🛠️ Chart 制作者（Shippers）](#️-chart-制作者shippers)
   - [🧑‍💻 Chart 使用者（Consumers）](#-chart-使用者consumers)
 - [🧩 模板基础](#-模板基础)
@@ -112,7 +111,7 @@ composepack logs myapp --follow
 
 ## 📦 安装
 
-> ComposePack 是一个单独的二进制，仅依赖系统已安装的 Docker / Docker Compose。
+> ComposePack 是一个单独的二进制CLI客户端，仅依赖系统已安装的 Docker / Docker Compose。
 
 ### macOS / Linux
 
@@ -166,10 +165,10 @@ make generate
 - 定义一个 **Chart**（Compose 模板 + 运行期文件）
 - 用户传入配置（`values.yaml`、`-f`、`--set`、环境变量）
 - ComposePack 将它们渲染为一个 **独立的 release 目录**
-- 随后Docker Compose就会在这个目录里执行
+- 随后在这个目录里运行Docker Compose
 
 换句话说：
-ComposePack 负责「生成一个干净的运行目录」，
+ComposePack 负责「整合生成一个干净的运行目录」，
 而实际起容器这件事，仍然交给 `docker compose`。
 
 ---
@@ -275,7 +274,6 @@ composepack down myapp --volumes
 composepack logs myapp --follow
 composepack ps myapp
 composepack template myapp
-composepack version
 ```
 
 该 release 的所有运行文件位于：
@@ -287,14 +285,12 @@ composepack version
   release.json
 ```
 
-需要时，你也可以：
+需要时，你也可以手动使用原生命令：
 
 ```bash
 cd .cpack-releases/myapp
 docker compose up
 ```
-
-手动使用原生命令进行排障。
 
 如果希望在其他工作目录下直接操作，也可以使用 `--runtime-dir` 指向某个 release 目录：
 
@@ -333,7 +329,7 @@ services:
 
 ## 📂 Chart 结构与文件类型
 
-这一部分说明：**什么文件放在哪里，以及 ComposePack 会如何处理它们。**
+这一部分会说明：**什么文件放在哪里，以及 ComposePack 会如何处理它们。**
 
 ### 典型 Chart 结构
 
@@ -505,7 +501,7 @@ services:
       - ./files/scripts/init.sh:/docker-entrypoint.d/init.sh:ro
 ```
 
-如果你引用了 `./files/` 之外的路径，容器很可能找不到对应文件。
+如果你引用了 `./files/` 之外的路径，容器会找不到对应文件。
 
 ---
 
@@ -551,7 +547,7 @@ cd .cpack-releases/myapp
 docker compose -f docker-compose.yaml up
 ```
 
-必须在有 `.cpack-releases` 的父目录下执行 ComposePack，否则 ComposePack 无法找到正确的文件。
+必须在有 `.cpack-releases` 的父目录下执行 ComposePack 或者指明 `--runtime-dir`，否则 ComposePack 无法找到正确的文件。
 如果你想手动用 `docker compose` 排查问题，请先 `cd` 到对应的 release 目录。
 
 ---
@@ -590,7 +586,7 @@ ComposePack 提供：
 
 ### 为什么不用 Helm？
 
-Helm 很好，但只能在 **Kubernetes** 上使用。
+你说的对, 但是Helm只能在 **Kubernetes** 上使用。
 
 适合用 Helm 的场景：
 
@@ -602,6 +598,7 @@ Helm 很好，但只能在 **Kubernetes** 上使用。
 - 想要 Helm 一样的模板和 Chart 体验
 - 想继续使用 **纯 Docker Compose**
 - 不想引入完整的 Kubernetes 复杂度
+- 你被公司要求同时维护Docker Compose和Helm的解决方案，发现原生Compose体验太差，希望可以接近Helm的体验 （并非本人亲身经历）
 
 可以简单地理解为：
 **ComposePack = 为 Compose 带来 Helm 级别的发布体验。**
