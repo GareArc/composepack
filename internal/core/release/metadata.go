@@ -23,7 +23,7 @@ type Metadata struct {
 	ChartDigest   string              `json:"chartDigest"`
 	RuntimePath   string              `json:"runtimePath"`
 	CreatedAt     time.Time           `json:"createdAt"`
-	Values        map[string]any      `json:"values"`
+	Values        map[string]any      `json:"values,omitempty"`
 	ValuesSources []string            `json:"valuesSources"`
 	ComposeFiles  []string            `json:"composeFiles"`
 }
