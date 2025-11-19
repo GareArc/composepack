@@ -1,7 +1,10 @@
 package release
 
 import (
+	"composepack/internal/core/chart"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,15 +18,14 @@ const metadataFileName = "release.json"
 
 // Metadata captures release.json contents in runtime directories.
 type Metadata struct {
-	ReleaseName   string         `json:"releaseName"`
-	ChartName     string         `json:"chartName"`
-	ChartVersion  string         `json:"chartVersion"`
-	ChartDigest   string         `json:"chartDigest"`
-	RuntimePath   string         `json:"runtimePath"`
-	CreatedAt     time.Time      `json:"createdAt"`
-	Values        map[string]any `json:"values"`
-	ValuesSources []string       `json:"valuesSources"`
-	ComposeFiles  []string       `json:"composeFiles"`
+	ReleaseName   string              `json:"releaseName"`
+	ChartMetadata chart.ChartMetadata `json:"chartMetadata"`
+	ChartDigest   string              `json:"chartDigest"`
+	RuntimePath   string              `json:"runtimePath"`
+	CreatedAt     time.Time           `json:"createdAt"`
+	Values        map[string]any      `json:"values"`
+	ValuesSources []string            `json:"valuesSources"`
+	ComposeFiles  []string            `json:"composeFiles"`
 }
 
 // Store persists release metadata inside runtime directories.
@@ -74,10 +76,18 @@ func (s *Store) Save(ctx context.Context, runtimePath string, meta *Metadata) er
 	if meta.CreatedAt.IsZero() {
 		meta.CreatedAt = time.Now().UTC()
 	}
+	meta.Digest()
 
 	if err := os.MkdirAll(runtimePath, 0o755); err != nil {
 		return fmt.Errorf("ensure runtime directory: %w", err)
 	}
+
+	// hide confidential fields from the metadata
+	val := meta.Values
+	meta.Values = nil
+	defer func() {
+		meta.Values = val
+	}()
 
 	data, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
@@ -93,4 +103,19 @@ func (s *Store) Save(ctx context.Context, runtimePath string, meta *Metadata) er
 	}
 
 	return nil
+}
+
+func (m *Metadata) Digest() {
+	fieldsToBeHashed := []string{
+		m.ReleaseName,
+		m.ChartMetadata.Name,
+		m.ChartMetadata.Version,
+		m.ChartMetadata.Description,
+		m.CreatedAt.UTC().Format(time.RFC3339),
+	}
+	hash := sha256.New()
+	for _, field := range fieldsToBeHashed {
+		hash.Write([]byte(field))
+	}
+	m.ChartDigest = hex.EncodeToString(hash.Sum(nil))
 }
