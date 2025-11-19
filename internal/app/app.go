@@ -242,10 +242,7 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 		Release: templating.ReleaseInfo{
 			Name: opts.ReleaseName,
 		},
-		Chart: templating.ChartInfo{
-			Name:    ch.Metadata.Name,
-			Version: ch.Metadata.Version,
-		},
+		Chart: ch.Metadata,
 		Files: templating.NewFilesAccessor(ch.StaticFiles),
 	}
 
@@ -284,8 +281,7 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 
 	meta := &release.Metadata{
 		ReleaseName:   opts.ReleaseName,
-		ChartName:     ch.Metadata.Name,
-		ChartVersion:  ch.Metadata.Version,
+		ChartMetadata: ch.Metadata,
 		Values:        deepCopyMap(mergedValues),
 		ValuesSources: valueSources,
 		ComposeFiles:  orderedFragments,

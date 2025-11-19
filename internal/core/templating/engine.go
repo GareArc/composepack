@@ -25,7 +25,7 @@ type RenderContext struct {
 	Values  map[string]any
 	Env     map[string]string
 	Release ReleaseInfo
-	Chart   ChartInfo
+	Chart   chart.ChartMetadata
 	Files   FilesAccessor
 }
 
@@ -33,12 +33,6 @@ type RenderContext struct {
 type ReleaseInfo struct {
 	Name    string
 	Service string
-}
-
-// ChartInfo mirrors the fields surfaced via `.Chart`.
-type ChartInfo struct {
-	Name    string
-	Version string
 }
 
 // FilesAccessor allows templates to read embedded file contents via `.Files`.
