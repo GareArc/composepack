@@ -116,6 +116,7 @@ func (m *Metadata) Digest() {
 	hash := sha256.New()
 	for _, field := range fieldsToBeHashed {
 		hash.Write([]byte(field))
+		hash.Write([]byte{0})
 	}
 	m.ChartDigest = hex.EncodeToString(hash.Sum(nil))
 }
