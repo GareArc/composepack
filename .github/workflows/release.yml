@@ -148,4 +148,6 @@ jobs:
             exit 0
           fi
           git commit -m "composepack ${VERSION}: update formula"
-          git push
+          TAP_REPO="${{ steps.taprepo.outputs.tap }}"
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          git push "https://x-access-token:${HOMEBREW_TAP_GITHUB_TOKEN}@github.com/${TAP_REPO}.git" "HEAD:${BRANCH}"
