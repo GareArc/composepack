@@ -15,6 +15,7 @@ if [[ $# -ne 5 ]]; then
 fi
 
 VERSION="$1"
+VERSION_NO_V="${VERSION#v}"
 REPO_SLUG="$2" # OWNER/REPO
 OUT="$3"
 SHA_DARWIN_AMD64="$4"
@@ -27,7 +28,7 @@ cat >"$OUT" <<RUBY
 class Composepack < Formula
   desc "Helm-style templating and packaging for Docker Compose"
   homepage "https://github.com/${OWNER}/${REPO}"
-  version "${VERSION}"
+  version "${VERSION_NO_V}"
 
   on_macos do
     if Hardware::CPU.arm?
@@ -50,3 +51,4 @@ end
 RUBY
 
 echo "Wrote Homebrew formula to: $OUT"
+

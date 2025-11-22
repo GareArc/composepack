@@ -55,7 +55,7 @@ jobs:
           if [[ "$GOOS" == "windows" ]]; then
             cp dist/composepack.exe "release/composepack-${GOOS}-${GOARCH}.exe"
           else
-            # Package non-Windows binaries into tar.gz, preserving executable bit
+            # Package non-Windows binaries into tar.gz for distribution
             tar -C dist -czf "release/composepack_${VERSION}_${GOOS}_${GOARCH}.tar.gz" composepack
           fi
       - name: Upload artifact
@@ -65,6 +65,7 @@ jobs:
           path: |
             release/composepack-${{ matrix.goos }}-${{ matrix.goarch }}*
             release/composepack_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}*.tar.gz
+          if-no-files-found: ignore
 
   publish:
     runs-on: ubuntu-latest
@@ -90,6 +91,8 @@ jobs:
     env:
       VERSION: ${{ github.ref_name }}
       REPO_SLUG: ${{ github.repository }}
+      HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+      HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -100,10 +103,10 @@ jobs:
       - name: Determine tap repository
         id: taprepo
         run: |
-          if [ -n "${{ vars.HOMEBREW_TAP_REPO }}" ]; then
-            echo "tap=${{ vars.HOMEBREW_TAP_REPO }}" >> "$GITHUB_OUTPUT"
+          if [ -n "${HOMEBREW_TAP_REPO}" ]; then
+            echo "tap=${HOMEBREW_TAP_REPO}" >> "$GITHUB_OUTPUT"
           else
-            echo "tap=${{ github.repository_owner }}/homebrew-tap" >> "$GITHUB_OUTPUT"
+            echo "tap=${GITHUB_REPOSITORY_OWNER}/homebrew-tap" >> "$GITHUB_OUTPUT"
           fi
       - name: Compute macOS checksums
         id: shas
@@ -124,14 +127,14 @@ jobs:
           echo "Generated formula:"
           cat out/composepack.rb
       - name: Push to tap repository
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.taprepo.outputs.tap }}
-          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          token: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN }}
           path: tap
       - name: Update formula in tap
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
         run: |
           set -euo pipefail
           mkdir -p tap/Formula
